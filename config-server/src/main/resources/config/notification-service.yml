@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: notification-service
+  cloud:
+    config:
+      enabled: true
+    bus:
+      enabled: false
+    function:
+      definition: accountEventConsumer;transactionInitConsumer;transactionRefundConsumer;transactionCompleteConsumer;otpEventConsumer
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-create-topics: true
+          auto-alter-topics: true
+          auto-add-partitions: true
+        bindings:
+          accountEventConsumer-in-0:
+            consumer:
+              ack-mode: MANUAL
+          transactionInitConsumer-in-0:
+            consumer:
+              ack-mode: MANUAL
+          transactionRefundConsumer-in-0:
+            consumer:
+              ack-mode: MANUAL
+          transactionCompleteConsumer-in-0:
+            consumer:
+              ack-mode: MANUAL
+          otpEventConsumer-in-0:
+            consumer:
+              ack-mode: MANUAL
+      bindings:
+        otpEventConsumer-in-0:
+          destination: otp-generation-event
+          group: notification-service-group
+        transactionInitConsumer-in-0:
+          destination: transactioninitiated
+          group: notification-service-group
+        transactionRefundConsumer-in-0:
+          destination: transactionrefunded
+          group: notification-service-group
+        transactionCompleteConsumer-in-0:
+          destination: transactioncompleted
+          group: notification-service-group
+        accountEventConsumer-in-0:
+          destination: account
+          group: notification-service-group
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 587
+    username: 712d81d6ac921a
+    password: 2db3c43350bdb6
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+server:
+  port: 8083
+
+logging:
+  level:
+    org.apache.kafka: ERROR
+    org.apache.kafka.clients.consumer: ERROR
+    org.springframework.cloud.stream.binder.kafka: WARN
+    org.springframework.kafka: WARN

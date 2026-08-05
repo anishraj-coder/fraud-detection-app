@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: fraud-detection-service
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    function:
+      definition: transactionInitConsumer;cleanTransactionProducer;verifyTransactionProducer
+    config:
+      enabled: true
+      discovery:
+        enabled: true
+        service-id: CONFIG-SERVER
+    bus:
+      enabled: false
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-create-topics: true
+          auto-alter-topics: true
+          auto-add-partitions: true
+        bindings:
+          verifyTransactionProducer-out-0:
+            producer:
+              configuration:
+                retries: 2
+                acks: all
+                enable.idempotence: true
+          cleanTransactionProducer-out-0:
+            producer:
+              configuration:
+                retries: 2
+                acks: all
+                enable.idempotence: true
+          transactionInitConsumer-in-0:
+            consumer:
+              ack-mode: MANUAL
+      bindings:
+        verifyTransactionProducer-out-0:
+          destination: verify-transaction
+          producer:
+            partition-key-expression: headers['partitionId']
+        cleanTransactionProducer-out-0:
+          destination: fraud-check-clean
+          producer:
+            partition-key-expression: headers['partitionId']
+        transactionInitConsumer-in-0:
+          destination: transactioninitiated
+          group: fraud-detection-service-group
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+server:
+  port: 8085

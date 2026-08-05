@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: payment-service
+
+  web:
+    error:
+      include-message: ALWAYS
+  r2dbc:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    pool:
+      enabled: true
+      initial-size: 1
+      max-size: 3
+      max-idle-time: 10ms
+      max-acquire-time: 5s
+
+  cloud:
+    config:
+      enabled: true
+    discovery:
+      enabled: true
+      server-id: CONFIG-SERVER
+    bus:
+      enabled: false
+    function:
+      definition: paymentCompletedProducer
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-add-partitions: true
+          auto-alter-topics: true
+          auto-create-topics: true
+        bindings:
+          paymentCompletedProducer-out-0:
+            producer:
+              configuration:
+                retries: 2
+                acks: all
+                enable.idempotence: true
+      bindings:
+        paymentCompletedProducer-out-0:
+          destination: payment-completed
+          producer:
+            partition-key-expression: "headers['partitionKey']"
+            partition-count: 2
+
+  sql:
+    init:
+      mode: ALWAYS
+      data-locations: classpath:data.sql
+      schema-locations: classpath:schema.sql
+
+
+razorpay:
+  key-id: ${RAZORPAY_ID}
+  key-secret: ${RAZORPAY_SECRET}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+
+server:
+  port: 8086
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+springdoc:
+  api-docs:
+    path: /api/v1/payments/v3/api-docs
+
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},traceId=%X{X-Correlation-ID}]"
+  level:
+    org.apache.kafka: ERROR
+    org.apache.kafka.clients.consumer: ERROR
+    org.springframework.cloud.stream.binder.kafka: WARN
+    org.springframework.kafka: WARN

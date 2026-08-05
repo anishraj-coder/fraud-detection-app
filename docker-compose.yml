@@ -1,0 +1,146 @@
+services:
+  postgres:
+      image: postgres:alpine
+      container_name: postgres_dev
+      restart: unless-stopped
+      ports:
+        - "5432:5432"
+      environment:
+        POSTGRES_USER: admin
+        POSTGRES_PASSWORD: admin
+        POSTGRES_DB: local
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U admin -d local"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+        start_period: 15s
+      volumes:
+        - postgres_data_v18:/var/lib/postgresql
+        - ./init-scripts:/docker-entrypoint-initdb.d
+      deploy:
+        resources:
+          limits:
+            memory: 512M
+
+  redis:
+    image: redis:alpine
+    container_name: redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka_dev
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka_dev:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka_dev:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_JVM_PERFORMANCE_OPTS: "-Xmx512m -Xms512m"
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer_dev
+    restart: unless-stopped
+    ports:
+      - "9090:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka_ui_dev
+    restart: unless-stopped
+    ports:
+      - "9089:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: local-kraft-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka_dev:29092
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  casdoor:
+      image: casbin/casdoor-all-in-one:latest
+      container_name: casdoor_dev
+      restart: unless-stopped
+      ports:
+        - "8000:8000"
+      environment:
+        driver: "sqlite3"
+        dataSourceName: "/data/casdoor.db"
+        dbName: "casdoor"
+      volumes:
+        - casdoor_data:/data   # ✅ FIXED: Correct SQLite persistence path
+      deploy:
+        resources:
+          limits:
+            memory: 384M
+  
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak_dev
+    restart: unless-stopped
+    command: start-dev
+    ports:
+      - "7080:8080" # Exposed externally on port 7080
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: admin
+      KC_DB_PASSWORD: admin
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 7080
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080; echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; grep 'HTTP/1.1 200 OK' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+
+volumes:
+  postgres_data_v18:
+  redis_data:
+  kafka_data:
+  casdoor_data:

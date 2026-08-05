@@ -1,0 +1,131 @@
+spring:
+  web:
+    error:
+      include-message: ALWAYS
+  application:
+    name: transaction-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8000
+  r2dbc:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    pool:
+      enabled: true
+      initial-size: 1
+      max-size: 3
+      max-idle-time: 30m
+
+
+  data:
+    redis:
+      port: 6379
+      host: localhost
+
+  sql:
+    init:
+      mode: ALWAYS
+      schema-locations: classpath:/schema.sql
+      data-locations: classpath:/data.sql
+
+  cloud:
+    config:
+      enabled: true
+    discovery:
+      enabled: true
+      server-id: CONFIG-SERVER
+    bus:
+      enabled: false
+
+    function:
+      definition: transactionInitiatorProducer;transactionCompletedProducer;transactionRefundedProducer;verificationConsumer;otpVerificationProducer;cleanCheckConsumer
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-add-partitions: true
+          auto-alter-topics: true
+          auto-create-topics: true
+        bindings:
+          transactionInitiatorProducer-out-0:
+            producer:
+              configuration:
+                retries: 2
+                acks: all
+                enable.idempotence: true
+          transactionCompletedProducer-out-0:
+            producer:
+              configuration:
+                retries: 2
+                acks: all
+                enable.idempotence: true
+          transactionRefundedProducer-out-0:
+            producer:
+              configuration:
+                retries: 2
+                acks: all
+                enable.idempotence: true
+          verificationConsumer-in-0:
+            consumer:
+              ack-mode: MANUAL
+          cleanCheckConsumer-in-0:
+            consumer:
+              ack-mode: MANUAL
+          otpVerificationProducer-out-0:
+            producer:
+              configuration:
+                retries: 2
+                acks: all
+                enable.idempotence: true
+
+      bindings:
+        cleanCheckConsumer-in-0:
+          destination: fraud-check-clean
+          group: transaction-service-group
+        otpVerificationProducer-out-0:
+          destination: otp-generation-event
+          producer:
+            partition-key-expression: "headers['partitionID']"
+            partition-count: 2
+        verificationConsumer-in-0:
+          destination: verify-transaction
+          group: transaction-service-group
+        transactionInitiatorProducer-out-0:
+          destination: transactioninitiated
+          producer:
+            partition-key-expression: "headers['partitionID']"
+            partition-count: 2
+        transactionCompletedProducer-out-0:
+          destination: transactioncompleted
+          producer:
+            partition-key-expression: "headers['partitionID']"
+            partition-count: 2
+        transactionRefundedProducer-out-0:
+          destination: transactionrefunded
+          producer:
+            partition-key-expression: "headers['partitionID']"
+            partition-count: 2
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+springdoc:
+  api-docs:
+    path: /api/v1/transactions/v3/api-docs
+
+
+server:
+  port: 8084
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},traceId=%X{X-Correlation-ID}]"
+  level:
+    org.apache.kafka: ERROR
+    org.apache.kafka.clients.consumer: ERROR
+    org.springframework.cloud.stream.binder.kafka: WARN
+    org.springframework.kafka: WARN

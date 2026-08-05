@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: git
+  cloud:
+    refresh:
+      enabled: true
+    bus:
+      enabled: false
+    config:
+      server:
+        git:
+          uri: https://github.com/anishraj-coder/web-dev-private.git
+          search-paths: 'fraud-project-config'
+          username: anishraj-coder
+          password: ${GIT_PASSWORD}
+        native:
+          search-locations: classpath:/config/
+        encrypt:
+          enabled: true
+
+server:
+  port: 8888
+eureka:
+  client:
+    refresh:
+      enable: false
+    enabled: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  info:
+    env:
+      enabled: true
+info:
+  app:
+    name: "Config-server"
+    description: "Config server"
+    version: "1.0"
+    developed-by: "Yours truly"
+logging:
+  level:
+    org.apache.kafka: ERROR
+    org.apache.kafka.clients.consumer: ERROR
+    org.springframework.cloud.stream.binder.kafka: WARN
+    org.springframework.kafka: WARN

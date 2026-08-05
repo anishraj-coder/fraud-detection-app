@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: account-service
+  cloud:
+
+    config:
+      discovery:
+        enabled: true
+        service-id: CONFIG-SERVER
+  sql:
+    init:
+      mode: ALWAYS
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql

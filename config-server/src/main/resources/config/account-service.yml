@@ -1,0 +1,107 @@
+spring:
+  application:
+    name: account-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8000
+  web:
+    error:
+      include-message: ALWAYS
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/accounts
+    username: admin
+    password: admin
+    pool:
+      enabled: true
+  cloud:
+    config:
+      enabled: true
+    bus:
+      enabled: true
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-add-partitions: true
+          auto-alter-topics: true
+          auto-create-topics: true
+        bindings:
+          paymentCompletedConsumer-in-0:
+            consumer:
+              ack-mode: MANUAL
+          accountProducer-out-0:
+            producer:
+              configuration:
+                retries: 2
+                acks: all
+                enable.idempotence: true
+          transactionSuccessHandler-in-0:
+            consumer:
+              ack-mode: MANUAL
+          fraudDetectedHandler-in-0:
+            consumer:
+              ack-mode: MANUAL
+      bindings:
+        transactionSuccessHandler-in-0:
+          destination: transaction-success
+          group: account-service-group
+#        fraudDetectedHandler-in-0:
+#          destination: fraud-check-fail
+#          group: account-service-group
+        accountProducer-out-0:
+          destination: account
+          content-type: application/json
+          producer:
+            partition-key-expression: headers['partitionId']
+        paymentCompletedConsumer-in-0:
+          destination: payment-completed
+          group: account-service-group
+
+    function:
+      definition: accountProducer;transactionSuccessHandler;fraudDetectedHandler;paymentCompletedConsumer
+  sql:
+    init:
+      mode: ALWAYS
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+
+server:
+  port: 8082
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: "Accounts Service"
+    description: "Account Service"
+    version: "1.0"
+    developed-by: "Yours Truly"
+
+
+springdoc:
+  api-docs:
+    path: /api/v1/accounts/v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},traceId=%X{X-Correlation-ID}]"
+  level:
+    org.apache.kafka: ERROR
+    org.apache.kafka.clients.consumer: ERROR
+    org.springframework.cloud.stream.binder.kafka: WARN
+    org.springframework.kafka: WARN
