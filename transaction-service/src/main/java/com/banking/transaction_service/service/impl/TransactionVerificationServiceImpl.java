@@ -93,10 +93,6 @@ public class TransactionVerificationServiceImpl implements TransactionVerificati
     public Mono<Map<String, String>> verifyOtp(String refId, String otp) {
         String key = "verification:otp:" + refId;
         return reactiveRedisTemplate.opsForValue().get(key)
-                .switchIfEmpty(Mono.defer(() -> {
-                    log.warn("OTP Expired or Invalid for Ref No: {}", refId);
-                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "OTP expired or invalid"));
-                }))
                 .flatMap(value -> {
                     if (value.equals(otp)) {
                         log.info(">> OTP verified successfully for Ref: {}. Proceeding with transaction completion.", refId);
@@ -108,13 +104,50 @@ public class TransactionVerificationServiceImpl implements TransactionVerificati
                                 .then(transactionService.completeTransaction(refId))
                                 .then(Mono.just(map));
                     } else {
-                        log.warn(">> Invalid OTP submitted for Ref: {}. Compensating transaction.", refId);
+                        log.warn(">> Invalid OTP submitted for Ref: {}. Compensating transaction and blocking account.", refId);
                         return reactiveRedisTemplate.delete(key)
-                                .then(transactionService.compensateTransaction(refId))
-                                .then(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN,
-                                        "Invalid OTP. Transaction canceled and debited funds refunded.")));
+                                .then(transactionService.getTransactionByReferenceNumber(refId))
+                                .flatMap(transaction ->
+                                        transactionService.compensateTransaction(refId)
+                                                .then(accountClient.blockAccount(transaction.getSenderAccountNumber()))
+                                )
+                                .then(Mono.defer(() -> {
+                                    Map<String, String> map = new HashMap<>();
+                                    map.put("ReferenceNo", refId);
+                                    map.put("Status", "Invalid OTP. Transaction canceled, account blocked, and debited funds refunded.");
+                                    return Mono.just(map);
+                                }));
                     }
-                });
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    // Check if the transaction was already completed or flagged (e.g. via prefetch or double click)
+                    return transactionService.getTransactionByReferenceNumber(refId)
+                            .flatMap(transaction -> {
+                                if (transaction.getStatus() == TransactionStatus.COMPLETED) {
+                                    log.info(">> Transaction {} is already COMPLETED. Returning success.", refId);
+                                    Map<String, String> map = new HashMap<>();
+                                    map.put("ReferenceNo", refId);
+                                    map.put("Status", "The transaction has already been verified and completed successfully!");
+                                    return Mono.just(map);
+                                }
+                                if (transaction.getStatus() == TransactionStatus.FLAGGED) {
+                                    log.info(">> Transaction {} is already FLAGGED. Returning cancellation status.", refId);
+                                    Map<String, String> map = new HashMap<>();
+                                    map.put("ReferenceNo", refId);
+                                    map.put("Status", "Invalid OTP. Transaction has been canceled, account blocked, and debited funds refunded.");
+                                    return Mono.just(map);
+                                }
+                                log.warn("OTP Expired or Invalid for Ref No: {}", refId);
+                                return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "OTP expired or invalid"));
+                            })
+                            .onErrorResume(ex -> {
+                                if (ex instanceof ResponseStatusException) {
+                                    return Mono.error(ex);
+                                }
+                                log.warn("OTP Expired or Invalid for Ref No: {}", refId);
+                                return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "OTP expired or invalid"));
+                            });
+                }));
     }
 
 

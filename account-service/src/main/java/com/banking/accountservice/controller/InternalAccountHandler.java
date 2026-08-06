@@ -3,7 +3,6 @@ package com.banking.accountservice.controller;
 import com.banking.accountservice.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -55,5 +54,12 @@ public class InternalAccountHandler {
 
         return accountService.creditAmount(accountNumber, amount)
                 .flatMap(res -> ServerResponse.ok().bodyValue(res));
+    }
+
+    public Mono<ServerResponse> blockAccount(ServerRequest request) {
+        String accountNumber = request.pathVariable("accountNumber");
+        log.info(">> [Internal Call] Block request for account: {}", accountNumber);
+        return accountService.blockAccount(accountNumber)
+                .then(ServerResponse.ok().build());
     }
 }

@@ -142,6 +142,7 @@ public class AccountController {
                                 .GET("/{accountNumber}", internalHandler::getAccountByNumber)
                                 .POST("/{accountNumber}/debit", internalHandler::debitAccount)
                                 .POST("/{accountNumber}/credit", internalHandler::creditAccount)
+                                .PUT("/{accountNumber}/block", internalHandler::blockAccount)
                         )
                 )
                 .build();

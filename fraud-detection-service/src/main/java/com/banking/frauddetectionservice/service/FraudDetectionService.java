@@ -120,7 +120,7 @@ public class FraudDetectionService {
                         log.info(">> First transaction in window, setting 1 minute expiration key");
                         //Currently it returns true in dev just to reproduce unhappy flow of application and later will be
                         //changed to false
-                        return redisTemplate.expire(key, Duration.ofMinutes(1)).thenReturn(true);
+                        return redisTemplate.expire(key, Duration.ofMinutes(1)).thenReturn(false);
                     }
                     if (count > MAX_VELOCITY) {
                         log.warn("Velocity check failed for account: {}. Count: {}", accountNumber, count);

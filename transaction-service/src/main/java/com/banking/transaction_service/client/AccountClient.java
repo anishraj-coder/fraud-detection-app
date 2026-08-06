@@ -61,4 +61,23 @@ public class AccountClient {
                 .bodyToMono(AccountResponse.class)
                 .doOnNext(acc -> log.info("Successfully fetched details for account: {}", acc.getAccountNumber()));
     }
+
+    /**
+     * Calls ACCOUNT-SERVICE /api/v1/internal/accounts/{accountNumber}/block to block the account.
+     * Used internally when a fraudulent transaction (invalid OTP) is detected.
+     */
+    public Mono<Void> blockAccount(String accountNumber) {
+        log.info("Requesting ACCOUNT-SERVICE to block account number: {}", accountNumber);
+
+        return webClient.put()
+                .uri("/internal/accounts/{accountNumber}/block", accountNumber)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response ->
+                        response.bodyToMono(String.class)
+                                .flatMap(body -> Mono.error(new ResponseStatusException(
+                                        HttpStatus.INTERNAL_SERVER_ERROR, "Failed to block account " + accountNumber + ": " + body)))
+                )
+                .bodyToMono(Void.class)
+                .doOnSuccess(unused -> log.info("Successfully requested block for account: {}", accountNumber));
+    }
 }
