@@ -25,11 +25,12 @@ public class RateLimitingConfig {
     }
     /**
      * Default Rate Limiter rule:
-     * - replenishRate: 1 requests per second (refill rate)
-     * - burstCapacity: 5 maximum requests allowed in 1 second
+     * - replenishRate: 10 requests per second (refill rate)
+     * - burstCapacity: 20 maximum requests allowed in 1 second
      */
     @Bean
     public RedisRateLimiter redisRateLimiterConfig(){
-        return new RedisRateLimiter(1,5);
+        return new RedisRateLimiter(10, 20);
     }
 }
+

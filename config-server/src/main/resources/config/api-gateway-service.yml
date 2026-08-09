@@ -5,23 +5,20 @@ spring:
   application:
     name: api-gateway-service
   cloud:
+    refresh:
+      enabled: false
     bus:
       enabled: false
-    config:
-      enabled: true
-    discovery:
-      enabled: true
-      server-id: CONFIG-SERVER
   data:
     redis:
-      port: 6379
-      host: localhost
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8000
-          jwk-set-uri: http://localhost:8000/.well-known/jwks
+          issuer-uri: ${CASDOOR_ISSUER_URI:http://localhost:8000}
+          jwk-set-uri: ${CASDOOR_JWK_SET_URI:http://localhost:8000/.well-known/jwks}
 
 resilience4j:
   circuitbreaker:
@@ -47,9 +44,11 @@ resilience4j:
 eureka:
   client:
     enabled: true
+    refresh:
+      enable: false
     fetch-registry: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 
 management:
   info:
@@ -73,7 +72,7 @@ info:
 
 security:
   config:
-    allowed-origins: "http://localhost:3000,https://your-production-domain.com"
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}
 
 
 springdoc:

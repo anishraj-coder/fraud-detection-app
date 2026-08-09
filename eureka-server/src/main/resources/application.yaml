@@ -6,16 +6,33 @@ spring:
       enabled: false
 eureka:
   instance:
-    prefer-ip-address: false
+    hostname: eureka-server
+  server:
+    wait-time-in-ms-when-sync-empty: 0
+    peer-eureka-nodes-update-interval-ms: 600000
+    enable-self-preservation: false
+    response-cache-update-interval-ms: 3000
+    eviction-interval-timer-in-ms: 5000
   client:
     enabled: true
+    refresh:
+      enable: false
     register-with-eureka: false
     fetch-registry: false
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-server:8761/eureka/
 
 server:
   port: 8761
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
 logging:
   level:

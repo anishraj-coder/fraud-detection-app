@@ -1,0 +1,10 @@
+{
+  "resources": {
+    "includes": [
+      { "pattern": "schema.sql" },
+      { "pattern": "data.sql" },
+      { "pattern": "truststore.jks" },
+      { "pattern": "ca.pem" }
+    ]
+  }
+}

@@ -13,4 +13,5 @@ VALUES
 ('pay-004-20260723', 'order_N4d5E6f7G8h9I4', '50100012345675', 10000.00, 'INR', 'FAILED', 'Software License Fee', 'Payment failed due to insufficient funds', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'),
 
 -- Refunded Payment for Sneha Kulkarni
-('pay-005-20260723', 'order_N5e6F7g8H9i0J5', '50100012345676', 750.25, 'INR', 'REFUNDED', 'E-commerce Return Refund', NULL, NOW() - INTERVAL '3 days', NOW() - INTERVAL '1 day');
+('pay-005-20260723', 'order_N5e6F7g8H9i0J5', '50100012345676', 750.25, 'INR', 'REFUNDED', 'E-commerce Return Refund', NULL, NOW() - INTERVAL '3 days', NOW() - INTERVAL '1 day')
+ON CONFLICT (id) DO NOTHING;

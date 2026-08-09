@@ -25,7 +25,8 @@ public class OtpEventProducerConfig {
     }
 
     public void publishOtpVerificationEvent(OtpVerification event){
-        log.info("Publishing the event of otp verification");
+        log.info("Publishing the event of otp verification: Ref={}, email={}, otp={}", 
+                event.referenceId(), event.email(), event.otp());
         Message<OtpVerification> message= MessageBuilder.withPayload(event)
                 .setHeader("partitionID",event.referenceId())
                 .build();

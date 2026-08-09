@@ -5,25 +5,24 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8000
+          issuer-uri: ${CASDOOR_ISSUER_URI:http://localhost:8000}
+          jwk-set-uri: ${CASDOOR_JWK_SET_URI:http://localhost:8000/.well-known/jwks}
   web:
     error:
       include-message: ALWAYS
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/accounts
-    username: admin
-    password: admin
+    url: ${DATABASE_URL:r2dbc:postgresql://localhost:5432/accounts}
+    username: ${DATABASE_USER:admin}
+    password: ${DATABASE_PASSWORD:admin}
     pool:
       enabled: true
   cloud:
     config:
       enabled: true
-    bus:
-      enabled: true
     stream:
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: ${SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS:localhost:9092}
           auto-add-partitions: true
           auto-alter-topics: true
           auto-create-topics: true
@@ -64,6 +63,7 @@ spring:
   sql:
     init:
       mode: ALWAYS
+      continue-on-error: true
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
 
@@ -72,8 +72,10 @@ server:
 
 eureka:
   client:
+    refresh:
+      enable: false
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 
 
 management:

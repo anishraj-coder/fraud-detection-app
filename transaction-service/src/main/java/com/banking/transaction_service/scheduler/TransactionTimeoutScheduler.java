@@ -18,7 +18,7 @@ public class TransactionTimeoutScheduler {
     private final TransactionRepository transactionRepository;
     private final TransactionService transactionService;
 
-    @Scheduled(fixedDelay = 6000)
+    @Scheduled(fixedDelay = 10000)
     public void processExpiredTransactions(){
         LocalDateTime cutOffTime=LocalDateTime.now().minus(Duration.ofMinutes(5));
         transactionRepository.findByStatusAndCreatedAtBefore(TransactionStatus.DEBITED,cutOffTime)

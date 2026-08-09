@@ -24,7 +24,15 @@ public class PaymentHandler {
                 .flatMap(validator::validate)
                 .flatMap(paymentService::createPayment)
                 .flatMap(res->ServerResponse.status(HttpStatus.CREATED).bodyValue(res))
-                .doOnError(ex->log.error("Error creating payment order: {}", ex.getMessage()));
+                .onErrorResume(ex -> {
+                    log.error("Error creating payment order: {}", ex.getMessage());
+                    java.util.Map<String, Object> errResponse = new java.util.HashMap<>();
+                    errResponse.put("timestamp", java.time.LocalDateTime.now().toString());
+                    errResponse.put("status", HttpStatus.BAD_REQUEST.value());
+                    errResponse.put("error", "Payment Creation Failed");
+                    errResponse.put("message", ex.getMessage());
+                    return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue(errResponse);
+                });
     }
 
     public Mono<ServerResponse> handleWebhook(ServerRequest request){

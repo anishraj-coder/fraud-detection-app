@@ -6,9 +6,9 @@ spring:
     error:
       include-message: ALWAYS
   r2dbc:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USER}
-    password: ${DATABASE_PASSWORD}
+    url: ${DATABASE_URL:r2dbc:postgresql://localhost:5432/accounts}
+    username: ${DATABASE_USER:admin}
+    password: ${DATABASE_PASSWORD:admin}
     pool:
       enabled: true
       initial-size: 1
@@ -29,7 +29,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: ${SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS:localhost:9092}
           auto-add-partitions: true
           auto-alter-topics: true
           auto-create-topics: true
@@ -50,22 +50,25 @@ spring:
   sql:
     init:
       mode: ALWAYS
+      continue-on-error: true
       data-locations: classpath:data.sql
       schema-locations: classpath:schema.sql
 
 
 razorpay:
-  key-id: ${RAZORPAY_ID}
-  key-secret: ${RAZORPAY_SECRET}
-  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+  key-id: ${RAZORPAY_ID:dummy_id}
+  key-secret: ${RAZORPAY_SECRET:dummy_secret}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:dummy_webhook_secret}
 
 server:
   port: 8086
 
 eureka:
   client:
+    refresh:
+      enable: false
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 
 springdoc:
   api-docs:
@@ -80,3 +83,20 @@ logging:
     org.apache.kafka.clients.consumer: ERROR
     org.springframework.cloud.stream.binder.kafka: WARN
     org.springframework.kafka: WARN
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: "Payment Service"
+    description: "Payment Service"
+    version: "1.0"
+    developed-by: "Yours Truly"

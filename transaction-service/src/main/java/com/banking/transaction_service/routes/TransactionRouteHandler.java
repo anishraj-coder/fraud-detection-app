@@ -69,11 +69,21 @@ public class TransactionRouteHandler {
 
     public Mono<ServerResponse> getTransactionHistoryUser(ServerRequest request){
         printIncomingLog();
-        Flux<TransferResponseDTO> historyFlux=transactionService
-                .getTransactionHistoryUser().map(this::convertToTransferResponse);
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(historyFlux,TransferResponseDTO.class);
-
+        return transactionService.getTransactionHistoryUser()
+                .map(this::convertToTransferResponse)
+                .collectList()
+                .flatMap(history -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(history))
+                .onErrorResume(ResponseStatusException.class, ex -> {
+                    log.warn("Could not fetch transaction history: {}", ex.getReason());
+                    if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(java.util.Collections.emptyList());
+                    }
+                    return ServerResponse.status(ex.getStatusCode()).bodyValue(java.util.Map.of("error", ex.getReason()));
+                })
+                .onErrorResume(ex -> {
+                    log.error("Error fetching transaction history", ex);
+                    return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).bodyValue(java.util.Map.of("error", ex.getMessage()));
+                });
     }
 
     public Mono<ServerResponse> getTransactionHistoryAdmin(ServerRequest request) {

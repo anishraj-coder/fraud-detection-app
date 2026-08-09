@@ -1,6 +1,8 @@
 spring:
   application:
     name: notification-service
+  main:
+    web-application-type: reactive
   cloud:
     config:
       enabled: true
@@ -11,7 +13,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: ${SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS:localhost:9092}
           auto-create-topics: true
           auto-alter-topics: true
           auto-add-partitions: true
@@ -48,21 +50,32 @@ spring:
           destination: account
           group: notification-service-group
   mail:
-    host: sandbox.smtp.mailtrap.io
-    port: 587
-    username: 712d81d6ac921a
-    password: 2db3c43350bdb6
+    host: 127.0.0.1
+    port: 3535
     properties:
       mail:
         smtp:
-          auth: true
+          auth: false
           starttls:
-            enable: true
+            enable: false
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
 
 eureka:
   client:
+    fetch-registry: false
+    register-with-eureka: true
+    refresh:
+      enable: false
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 
 server:
   port: 8083

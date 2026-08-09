@@ -23,16 +23,23 @@ public class GatewayRoutesConfig {
         return builder.routes()
                 // --- ACCOUNT SERVICE ROUTES ---
                 .route("account-service", r -> r
-                        .path("/api/v1/accounts/**", "/api/v1/admin/accounts/**","/api/v1/accounts/v3/api-docs")
+                        .path("/api/v1/accounts/**", "/api/v1/admin/accounts/**", "/api/v1/accounts/v3/api-docs")
                         .filters(f -> f
                                 .requestRateLimiter(config -> config
                                         .setKeyResolver(keyResolver)
                                         .setRateLimiter(rateLimiter)
                                 )
-                                .retry(config -> config.setRetries(3))
+                                // NOTE: Do NOT combine retry + circuitBreaker with a fallbackUri.
+                                // Retry commits the response on its last attempt, then circuitBreaker's
+                                // forward dispatch fails with UnsupportedOperationException.
+                                // CircuitBreaker alone handles resilience via fallback URI.
                                 .circuitBreaker(config -> config
                                         .setName("account-fallback")
                                         .setFallbackUri("forward:/fallback/accounts")
+                                        .addStatusCode("500")
+                                        .addStatusCode("502")
+                                        .addStatusCode("503")
+                                        .addStatusCode("504")
                                 )
                         ).uri("lb://ACCOUNT-SERVICE")
                 )
@@ -53,10 +60,13 @@ public class GatewayRoutesConfig {
                                         .setKeyResolver(keyResolver)
                                         .setRateLimiter(rateLimiter)
                                 )
-                                .retry(config -> config.setRetries(3))
                                 .circuitBreaker(config -> config
                                         .setName("transactionCircuitBreaker")
                                         .setFallbackUri("forward:/fallback/transactions")
+                                        .addStatusCode("500")
+                                        .addStatusCode("502")
+                                        .addStatusCode("503")
+                                        .addStatusCode("504")
                                 )
                         )
                         .uri("lb://TRANSACTION-SERVICE")
@@ -64,16 +74,19 @@ public class GatewayRoutesConfig {
 
                 // --- PAYMENT SERVICE ROUTES ---
                 .route("payments-service", r -> r
-                        .path("/api/v1/payments/**","/api/v1/payments/v3/api-docs")
+                        .path("/api/v1/payments/**", "/api/v1/payments/v3/api-docs")
                         .filters(f -> f
                                 .requestRateLimiter(config -> config
                                         .setKeyResolver(keyResolver)
                                         .setRateLimiter(rateLimiter)
                                 )
-                                .retry(config -> config.setRetries(3))
                                 .circuitBreaker(config -> config
                                         .setName("paymentCircuitBreaker")
                                         .setFallbackUri("forward:/fallback/payments")
+                                        .addStatusCode("500")
+                                        .addStatusCode("502")
+                                        .addStatusCode("503")
+                                        .addStatusCode("504")
                                 )
                         )
                         .uri("lb://PAYMENT-SERVICE")
@@ -81,3 +94,4 @@ public class GatewayRoutesConfig {
                 .build();
     }
 }
+

@@ -19,6 +19,7 @@ spring:
           search-locations: classpath:/config/
         encrypt:
           enabled: true
+          
 
 server:
   port: 8888

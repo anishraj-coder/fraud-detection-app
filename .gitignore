@@ -1,0 +1,63 @@
+# ==========================================
+# Root .gitignore for Fraud Detection System
+# ==========================================
+
+# Environment & Secret Files
+.env
+**/.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Build Artifacts & Output Directories
+target/
+**/target/
+build/
+**/build/
+dist/
+**/dist/
+out/
+**/out/
+.vite/
+**/.vite/
+node_modules/
+**/node_modules/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE & Editor Configurations
+.idea/
+**/.idea/
+.vscode/
+**/.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.sts4-cache/
+
+# System & OS Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs & Temporary/Backup Files
+*.log
+**/logs/
+*.tmp
+*.bak
+*.backup
+docker-compose-backup.yml
+
+# Maven Wrapper JAR
+.mvn/wrapper/maven-wrapper.jar

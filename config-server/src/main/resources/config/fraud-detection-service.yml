@@ -3,13 +3,14 @@ spring:
     name: fraud-detection-service
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
   cloud:
     function:
       definition: transactionInitConsumer;cleanTransactionProducer;verifyTransactionProducer
     config:
       enabled: true
+
       discovery:
         enabled: true
         service-id: CONFIG-SERVER
@@ -19,7 +20,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: ${SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS:localhost:9092}
           auto-create-topics: true
           auto-alter-topics: true
           auto-add-partitions: true
@@ -53,11 +54,28 @@ spring:
           group: fraud-detection-service-group
 eureka:
   client:
+    fetch-registry: false
+    register-with-eureka: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 
 server:
   port: 8085
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+info:
+  app:
+    name: "fraud-detection-service"
+    description: "Fraud Detection Service"
+    version: "1.0"
+    developed-by: 'yours-truly'
 
 logging:
   level:
