@@ -65,7 +65,7 @@ spring:
       definition: accountProducer;transactionSuccessHandler;fraudDetectedHandler;paymentCompletedConsumer
   sql:
     init:
-      mode: ALWAYS
+      mode: NEVER
       continue-on-error: true
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql

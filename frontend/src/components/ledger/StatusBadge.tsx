@@ -11,8 +11,9 @@ export const StatusBadge: React.FC<Props> = ({ status }) => {
         case 'COMPLETED':
             return <Badge variant="success">COMPLETED</Badge>;
         case 'PENDING_VERIFICATION':
-        case 'FLAGGED':
             return <Badge variant="warning" className="animate-pulse">PENDING OTP</Badge>;
+        case 'FLAGGED':
+            return <Badge variant="destructive">FLAGGED</Badge>;
         case 'DEBITED':
         case 'PENDING':
             return <Badge variant="info">PROCESSING</Badge>;

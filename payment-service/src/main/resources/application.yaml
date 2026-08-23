@@ -4,7 +4,12 @@ spring:
   main:
     web-application-type: REACTIVE
   config:
-    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}"
+    import: "optional:configserver:"
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: CONFIG-SERVER
 
 eureka:
   client:

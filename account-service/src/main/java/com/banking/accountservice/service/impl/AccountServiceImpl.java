@@ -171,11 +171,10 @@ public class AccountServiceImpl implements AccountService {
         log.info("Processing CREDIT of {} to account: {}", amount, accountNumber);
         return getAccountByNumber(accountNumber)
                 .flatMap(acc -> {
-                    if (acc.getAccountStatus() != AccountStatus.ACTIVE) {
-                        log.error("Cannot credit: Account {} is not ACTIVE (Status: {})",
-                                accountNumber, acc.getAccountStatus());
+                    if (acc.getAccountStatus() == AccountStatus.CLOSED) {
+                        log.error("Cannot credit: Account {} is CLOSED", accountNumber);
                         return Mono.error(new ResponseStatusException(
-                                HttpStatus.FORBIDDEN, "Account is not active"));
+                                HttpStatus.FORBIDDEN, "Account is closed"));
                     }
                     return Mono.just(acc);
                 })

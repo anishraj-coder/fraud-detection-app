@@ -1,21 +1,8 @@
-# =============================================================================
-# Dockerfile for GraalVM Native Binary Service: notification-service
-# Base: debian:bookworm-slim with GLIBC, zlib1g, and curl
-# =============================================================================
-FROM debian:bookworm-slim
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates zlib1g curl && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
-
+FROM eclipse-temurin:21-jre-alpine
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
-
-COPY --chown=appuser:appgroup target/notification-service /app/application
-
+COPY --chown=appuser:appgroup target/*.jar app.jar
 USER appuser
-
 EXPOSE 8083
-
-ENTRYPOINT ["/app/application"]
+ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

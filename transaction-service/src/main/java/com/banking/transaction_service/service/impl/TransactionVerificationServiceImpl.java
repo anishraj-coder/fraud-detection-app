@@ -110,6 +110,10 @@ public class TransactionVerificationServiceImpl implements TransactionVerificati
                                 .flatMap(transaction ->
                                         transactionService.compensateTransaction(refId)
                                                 .then(accountClient.blockAccount(transaction.getSenderAccountNumber()))
+                                                .onErrorResume(ex -> {
+                                                    log.error("Failed to block account after compensation for Ref {}: {}", refId, ex.getMessage());
+                                                    return Mono.empty();
+                                                })
                                 )
                                 .then(Mono.defer(() -> {
                                     Map<String, String> map = new HashMap<>();
