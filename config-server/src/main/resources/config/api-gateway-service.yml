@@ -42,6 +42,9 @@ resilience4j:
 
 
 eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
   client:
     enabled: true
     refresh:
@@ -88,3 +91,8 @@ springdoc:
         url: /api/v1/transactions/v3/api-docs
       - name: 3. Payment Service
         url: /api/v1/payments/v3/api-docs
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG

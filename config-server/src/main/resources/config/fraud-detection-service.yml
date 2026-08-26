@@ -53,6 +53,9 @@ spring:
           destination: transactioninitiated
           group: fraud-detection-service-group
 eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
   client:
     fetch-registry: true
     register-with-eureka: true

@@ -64,6 +64,9 @@ server:
   port: 8086
 
 eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
   client:
     refresh:
       enable: false

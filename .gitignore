@@ -61,3 +61,5 @@ docker-compose-backup.yml
 
 # Maven Wrapper JAR
 .mvn/wrapper/maven-wrapper.jar
+*:Zone.Identifier*:Zone.Identifier
+*:Zone.Identifier*

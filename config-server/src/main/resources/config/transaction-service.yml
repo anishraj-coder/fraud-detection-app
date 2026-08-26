@@ -105,6 +105,9 @@ spring:
             partition-count: 2
 
 eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
   client:
     refresh:
       enable: false

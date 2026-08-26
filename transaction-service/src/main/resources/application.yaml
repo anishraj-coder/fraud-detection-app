@@ -8,8 +8,12 @@ spring:
   cloud:
     refresh:
       enabled: false
+    config:
+      discovery:
+        enabled: true
+        service-id: CONFIG-SERVER
   config:
-    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}"
+    import: "optional:configserver:"
 
 eureka:
   client:

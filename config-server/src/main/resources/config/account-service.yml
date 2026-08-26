@@ -36,19 +36,19 @@ spring:
                 retries: 2
                 acks: all
                 enable.idempotence: true
-          transactionSuccessHandler-in-0:
+          transactionInitiationHandler-in-0:
             consumer:
               ack-mode: MANUAL
-          fraudDetectedHandler-in-0:
+          transactionCreditHandler-in-0:
             consumer:
               ack-mode: MANUAL
       bindings:
-        transactionSuccessHandler-in-0:
-          destination: transaction-success
+        transactionInitiationHandler-in-0:
+          destination: transactioninitiated
           group: account-service-group
-#        fraudDetectedHandler-in-0:
-#          destination: fraud-check-fail
-#          group: account-service-group
+        transactionCreditHandler-in-0:
+          destination: transactioncompleted
+          group: account-service-group
         accountProducer-out-0:
           destination: account
           content-type: application/json
@@ -59,7 +59,7 @@ spring:
           group: account-service-group
 
     function:
-      definition: accountProducer;transactionSuccessHandler;fraudDetectedHandler;paymentCompletedConsumer
+      definition: accountProducer;transactionInitiationHandler;transactionCreditHandler;paymentCompletedConsumer
   sql:
     init:
       mode: ALWAYS
@@ -71,6 +71,9 @@ server:
   port: 8082
 
 eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
   client:
     refresh:
       enable: false
@@ -103,6 +106,8 @@ logging:
   pattern:
     level: "%5p [${spring.application.name:},traceId=%X{X-Correlation-ID}]"
   level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
     org.apache.kafka: ERROR
     org.apache.kafka.clients.consumer: ERROR
     org.springframework.cloud.stream.binder.kafka: WARN

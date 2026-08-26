@@ -62,6 +62,9 @@ spring:
             enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:true}
 
 eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
   client:
     fetch-registry: false
     register-with-eureka: true
